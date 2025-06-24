@@ -1,13 +1,6 @@
 import socket
-from enum import Enum, auto
 
-
-class ClientStatus(Enum):
-    SUCCESS = auto()
-    NOT_CONNECTED = auto()
-    CONNECTION_ERROR = auto()
-    SEND_ERROR = auto()
-    RECEIVE_ERROR = auto()
+import client_status as cs
 
 
 class Client:
@@ -16,50 +9,50 @@ class Client:
         self.connected = False
 
 
-    def connect(self, ip: str, port: int) -> ClientStatus:
+    def connect(self, ip: str, port: int) -> cs.ClientStatus:
         try:
             self.sock.connect((ip, port))
             self.connected = True
 
-            return ClientStatus.SUCCESS
+            return cs.ClientStatus.SUCCESS
         except socket.error:
             self.connected = False
 
-            return ClientStatus.CONNECTION_ERROR
+            return cs.ClientStatus.CONNECTION_ERROR
 
     
-    def disconnect(self) -> ClientStatus:
+    def disconnect(self) -> cs.ClientStatus:
         if self.connected:
             try:
                 self.sock.close()
                 self.connected = False
 
-                return ClientStatus.SUCCESS
+                return cs.ClientStatus.SUCCESS
             except socket.error:
-                return ClientStatus.CONNECTION_ERROR
+                return cs.ClientStatus.CONNECTION_ERROR
         
-        return ClientStatus.NOT_CONNECTED
+        return cs.ClientStatus.NOT_CONNECTED
 
 
-    def send(self, data: str) -> ClientStatus:
+    def send(self, data: str) -> cs.ClientStatus:
         if not self.connected:
-            return ClientStatus.NOT_CONNECTED
+            return cs.ClientStatus.NOT_CONNECTED
         try:
             self.sock.sendall(data.encode('utf-8'))
 
-            return ClientStatus.SUCCESS
+            return cs.ClientStatus.SUCCESS
         except socket.error:
-             return ClientStatus.SEND_ERROR
+             return cs.ClientStatus.SEND_ERROR
 
 
-    def receive(self, out_data: list, buffer_size: int = 1024) -> ClientStatus:
+    def receive(self, out_data: list, buffer_size: int = 1024) -> cs.ClientStatus:
         if not self.connected:
-            return ClientStatus.NOT_CONNECTED
+            return cs.ClientStatus.NOT_CONNECTED
         try:
             received = self.sock.recv(buffer_size)
             out_data.clear()
             out_data.append(received.decode('utf-8'))
 
-            return ClientStatus.SUCCESS
+            return cs.ClientStatus.SUCCESS
         except socket.error:
-            return ClientStatus.RECEIVE_ERROR
+            return cs.ClientStatus.RECEIVE_ERROR

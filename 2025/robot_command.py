@@ -9,6 +9,7 @@ class RobotCommand(Enum):
 
 
 MODE_TO_COMMAND = {
-    "cartesian": RobotCommand.MOVE_LINEAR,
-    "joint": RobotCommand.MOVE_JOINTS,
+    "cartesian_linear": RobotCommand.MOVE_LINEAR,
+    "cartesian_rotation": RobotCommand.MOVE_LINEAR,
+    "joint_rotation": RobotCommand.MOVE_JOINTS,
 }

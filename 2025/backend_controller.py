@@ -12,7 +12,8 @@ class BackendController:
         self.robot = VirtualRobot()
         self.client = Client()
         self.last_connection_status = ConnectionStatus.NONE
-        self.last_send_status = ConnectionStatus.NONE
+        self.last_cmd_send_status = ConnectionStatus.NONE
+        self.last_params_send_status = ConnectionStatus.NONE
         self.last_receive_status = ConnectionStatus.NONE
 
 
@@ -22,9 +23,8 @@ class BackendController:
 
 
     def disconnect(self):
-        params = [float(RobotCommand.EXIT.value)] * 6
-        cmd = CommandMessageManager.build_command(RobotCommand.EXIT, params)
-        self.last_send_status = self.client.send(cmd)
+        cmd = str(RobotCommand.EXIT.value)
+        self.last_cmd_send_status = self.client.send(cmd)
         
         self.last_connection_status = self.client.disconnect()
         
@@ -36,9 +36,8 @@ class BackendController:
 
 
     def get_pos(self):
-        params = [float(RobotCommand.GET_POSITION.value)] * 6
-        cmd = CommandMessageManager.build_command(RobotCommand.GET_POSITION, params)
-        self.last_send_status = self.client.send(cmd)
+        cmd = str(RobotCommand.GET_POSITION.value)
+        self.last_cmd_send_status = self.client.send(cmd)
 
         ans = []
         self.last_receive_status = self.client.receive(ans)
@@ -54,8 +53,14 @@ class BackendController:
         signed_step = step if direction == '+' else -step
         pos = self.robot.calculate_next_move(mode, axis_index, signed_step)
 
-        cmd = CommandMessageManager.build_command(MODE_TO_COMMAND[mode], pos)
-        self.last_send_status = self.client.send(cmd)
+        cmd = str(MODE_TO_COMMAND[mode].value)
+
+        params = CommandMessageManager.build_position_request(pos)
+        if "cartesian" in mode:
+            params = f"{params}({','.join(map(str, self.robot.kinematic_sol))})"
+
+        self.last_cmd_send_status = self.client.send(cmd)
+        self.last_params_send_status = self.client.send(params)
 
         ans = []
         self.last_receive_status = self.client.receive(ans)

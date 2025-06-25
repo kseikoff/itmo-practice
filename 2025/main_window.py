@@ -14,30 +14,30 @@ class MainWindow(QMainWindow):
         self.backend = BackendController()
 
         self.axis_button_map = {
-            'btn_Xp': ("cartesian_linear", ra.CartesianAxis.X, '+'),
-            'btn_Xm': ("cartesian_linear", ra.CartesianAxis.X, '-'),
-            'btn_Yp': ("cartesian_linear", ra.CartesianAxis.Y, '+'),
-            'btn_Ym': ("cartesian_linear", ra.CartesianAxis.Y, '-'),
-            'btn_Zp': ("cartesian_linear", ra.CartesianAxis.Z, '+'),
-            'btn_Zm': ("cartesian_linear", ra.CartesianAxis.Z, '-'),
-            'btn_RXp': ("cartesian_rotation", ra.CartesianAxis.A, '+'),
-            'btn_RXm': ("cartesian_rotation", ra.CartesianAxis.A, '-'),
-            'btn_RYp': ("cartesian_rotation", ra.CartesianAxis.B, '+'),
-            'btn_RYm': ("cartesian_rotation", ra.CartesianAxis.B, '-'),
-            'btn_RZp': ("cartesian_rotation", ra.CartesianAxis.C, '+'),
-            'btn_RZm': ("cartesian_rotation", ra.CartesianAxis.C, '-'),
-            'btn_J1p': ("joint_rotation", ra.JointAxis.J1, '+'),
-            'btn_J1m': ("joint_rotation", ra.JointAxis.J1, '-'),
-            'btn_J2p': ("joint_rotation", ra.JointAxis.J2, '+'),
-            'btn_J2m': ("joint_rotation", ra.JointAxis.J2, '-'),
-            'btn_J3p': ("joint_rotation", ra.JointAxis.J3, '+'),
-            'btn_J3m': ("joint_rotation", ra.JointAxis.J3, '-'),
-            'btn_J4p': ("joint_rotation", ra.JointAxis.J4, '+'),
-            'btn_J4m': ("joint_rotation", ra.JointAxis.J4, '-'),
-            'btn_J5p': ("joint_rotation", ra.JointAxis.J5, '+'),
-            'btn_J5m': ("joint_rotation", ra.JointAxis.J5, '-'),
-            'btn_J6p': ("joint_rotation", ra.JointAxis.J6, '+'),
-            'btn_J6m': ("joint_rotation", ra.JointAxis.J6, '-'),
+            'btn_Xp': ("cartesian_linear", ra.CartesianAxis.X.value, '+'),
+            'btn_Xm': ("cartesian_linear", ra.CartesianAxis.X.value, '-'),
+            'btn_Yp': ("cartesian_linear", ra.CartesianAxis.Y.value, '+'),
+            'btn_Ym': ("cartesian_linear", ra.CartesianAxis.Y.value, '-'),
+            'btn_Zp': ("cartesian_linear", ra.CartesianAxis.Z.value, '+'),
+            'btn_Zm': ("cartesian_linear", ra.CartesianAxis.Z.value, '-'),
+            'btn_RXp': ("cartesian_rotation", ra.CartesianAxis.A.value, '+'),
+            'btn_RXm': ("cartesian_rotation", ra.CartesianAxis.A.value, '-'),
+            'btn_RYp': ("cartesian_rotation", ra.CartesianAxis.B.value, '+'),
+            'btn_RYm': ("cartesian_rotation", ra.CartesianAxis.B.value, '-'),
+            'btn_RZp': ("cartesian_rotation", ra.CartesianAxis.C.value, '+'),
+            'btn_RZm': ("cartesian_rotation", ra.CartesianAxis.C.value, '-'),
+            'btn_J1p': ("joint_rotation", ra.JointAxis.J1.value, '+'),
+            'btn_J1m': ("joint_rotation", ra.JointAxis.J1.value, '-'),
+            'btn_J2p': ("joint_rotation", ra.JointAxis.J2.value, '+'),
+            'btn_J2m': ("joint_rotation", ra.JointAxis.J2.value, '-'),
+            'btn_J3p': ("joint_rotation", ra.JointAxis.J3.value, '+'),
+            'btn_J3m': ("joint_rotation", ra.JointAxis.J3.value, '-'),
+            'btn_J4p': ("joint_rotation", ra.JointAxis.J4.value, '+'),
+            'btn_J4m': ("joint_rotation", ra.JointAxis.J4.value, '-'),
+            'btn_J5p': ("joint_rotation", ra.JointAxis.J5.value, '+'),
+            'btn_J5m': ("joint_rotation", ra.JointAxis.J5.value, '-'),
+            'btn_J6p': ("joint_rotation", ra.JointAxis.J6.value, '+'),
+            'btn_J6m': ("joint_rotation", ra.JointAxis.J6.value, '-'),
         }
 
         self.linear_step_val = 0.1 # TODO improve slider
@@ -90,6 +90,9 @@ class MainWindow(QMainWindow):
 
         self.ui.tabWidget.setEnabled(False)
 
+        self.ui.IP_value.setText(Config.ip)
+        self.ui.Port_value.setText(str(Config.port))
+
 
     def update_ui_axis(self):
         cartesian_axis = self.backend.robot.cartesian
@@ -141,13 +144,10 @@ class MainWindow(QMainWindow):
 
                 if self.backend.is_connected():
                     response = self.backend.get_pos()
-                    curr_pos = CommandMessageManager.parse_position_response(response)
+                    joints, cartesian, kinematic_sol = CommandMessageManager.parse_position_response(response)
 
-                    new_linear_pos = curr_pos[:6]
-                    new_joint_pos = curr_pos[6:]
-
-                    self.backend.robot.update_cartesian(new_linear_pos)
-                    self.backend.robot.update_joint(new_joint_pos)
+                    self.backend.robot.update_cartesian(cartesian, kinematic_sol)
+                    self.backend.robot.update_joint(joints)
 
                     self.update_ui_axis()
 
@@ -184,13 +184,10 @@ class MainWindow(QMainWindow):
 
         try:
             response = self.backend.move_axis(move_info, step)
-            new_pos = CommandMessageManager.parse_position_response(response)
+            joints, cartesian, kinematic_sol = CommandMessageManager.parse_position_response(response)
 
-            new_linear_pos = new_pos[:6]
-            new_joint_pos = new_pos[6:]
-
-            self.backend.robot.update_cartesian(new_linear_pos)
-            self.backend.robot.update_joint(new_joint_pos)
+            self.backend.robot.update_cartesian(cartesian, kinematic_sol)
+            self.backend.robot.update_joint(joints)
 
             self.update_ui_axis()
         except Exception as e:

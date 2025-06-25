@@ -1,21 +1,23 @@
-from typing import List, Optional
-
-import robot_command as rc
+from typing import List
+import re
 
 
 class CommandMessageManager:
     @staticmethod
-    def build_command(cmd: rc.RobotCommand, params: Optional[List[float]] = None) -> str:
-        if params is None:
-            params = []
+    def build_position_request(pos: List[float]) -> str:
+        if len(pos) != 6:
+            raise ValueError('List of pos must contain 6 values')
 
-        param_str = ' '.join(f"{p:.4f}" for p in params)
-        return f"{cmd.value} {param_str}".strip()
+        return f"({','.join(map(str, pos))})"
 
 
     @staticmethod
-    def parse_position_response(response: str) -> Optional[List[float]]:
+    def parse_position_response(response: list):
         try:
-            return [float(x) for x in response.strip().split()]
+            matches = re.findall(r'\((.*?)\)', response[0])
+            lists = [list(map(float, group.split(','))) for group in matches[:2]]
+            lists.append(list(map(int, matches[2].split(','))))
+
+            return tuple(lists)
         except ValueError:
             return None

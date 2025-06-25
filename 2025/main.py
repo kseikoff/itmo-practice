@@ -1,3 +1,4 @@
+# import socket
 import sys
 from PySide6.QtWidgets import QApplication
 from config_manager import Config
@@ -12,5 +13,19 @@ if __name__ == "__main__":
 
     window = mw.MainWindow()
     window.show()
+
+    # test
+    # pos = [100.0, -100.0, 100.0, 100.0, 100.0, 100.0]
+    # from command_manager import CommandMessageManager
+    # test = CommandMessageManager.build_position_request(pos)
+    # test += "(7,0)"
+    # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # s.connect((Config.ip, Config.port))
+    # s.sendall("2".encode('utf-8'))
+    # s.sendall(test.encode('utf-8'))
+    # ans = s.recv(1024).decode('utf-8')
+    # print(ans)
+    # s.sendall("0".encode('utf-8'))
+    # s.close()
 
     sys.exit(app.exec())

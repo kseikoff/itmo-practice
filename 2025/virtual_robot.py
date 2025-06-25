@@ -1,4 +1,4 @@
-from typing import List, Literal
+from typing import List, Literal, Tuple
 
 
 class VirtualRobot:
@@ -7,12 +7,14 @@ class VirtualRobot:
                  joint: List[float] = None):
         self.cartesian = cartesian if cartesian is not None else [0.0] * 6
         self.joint = joint if joint is not None else [0.0] * 6
+        self.kinematic_sol = (0, 0)
 
 
-    def update_cartesian(self, new_values: List[float]):
+    def update_cartesian(self, new_values: List[float], kinematic_sol: Tuple[int, int]):
         if len(new_values) != 6:
             raise ValueError("Cartesian must have 6 values")
         self.cartesian = new_values.copy()
+        self.kinematic_sol = kinematic_sol
 
 
     def update_joint(self, new_values: List[float]):

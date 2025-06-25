@@ -22,7 +22,8 @@ class BackendController:
 
 
     def disconnect(self):
-        cmd = CommandMessageManager.build_command(RobotCommand.EXIT)
+        params = [float(RobotCommand.EXIT.value)] * 6
+        cmd = CommandMessageManager.build_command(RobotCommand.EXIT, params)
         self.last_send_status = self.client.send(cmd)
         
         self.last_connection_status = self.client.disconnect()
@@ -35,7 +36,8 @@ class BackendController:
 
 
     def get_pos(self):
-        cmd = CommandMessageManager.build_command(RobotCommand.GET_POSITION)
+        params = [float(RobotCommand.GET_POSITION.value)] * 6
+        cmd = CommandMessageManager.build_command(RobotCommand.GET_POSITION, params)
         self.last_send_status = self.client.send(cmd)
 
         ans = []

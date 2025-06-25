@@ -23,16 +23,16 @@ class VirtualRobot:
 
     def calculate_next_move(
         self,
-        mode: Literal["cartesian", "joint"],
+        mode: Literal["cartesian_linear", "cartesian_rotation", "joint_rotation"],
         axis_index: int,
         step: float
     ) -> List[float]:
         if not (0 <= axis_index < 6):
             raise ValueError("Value of axis_index must be in range from 0 to 5")
 
-        if mode == "cartesian":
+        if "cartesian" in mode:
             new_pos = self.cartesian.copy()
-        elif mode == "joint":
+        elif "joint" in mode:
             new_pos = self.joint.copy()
         else:
             raise ValueError("Expected 'cartesian' or 'joint' mode")
@@ -43,15 +43,15 @@ class VirtualRobot:
 
     def calculate_composite_move(
             self,
-            mode: Literal["cartesian", "joint"],
+            mode: Literal["cartesian_linear", "cartesian_rotation", "joint_rotation"],
             deltas: List[float]
     ) -> List[float]:
         if len(deltas) != 6:
             raise ValueError("Value of deltas must contain 6 values")
 
-        if mode == "cartesian":
+        if "cartesian" in mode:
             base = self.cartesian
-        elif mode == "joint":
+        elif "joint" in mode:
             base = self.joint
         else:
             raise ValueError("Expected 'cartesian' or 'joint' mode")

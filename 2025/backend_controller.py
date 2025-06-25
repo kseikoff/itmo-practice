@@ -30,6 +30,10 @@ class BackendController:
         return not self.client.connected
 
 
+    def is_connected(self):
+        return self.client.connected
+
+
     def get_pos(self):
         cmd = CommandMessageManager.build_command(RobotCommand.GET_POSITION)
         self.last_send_status = self.client.send(cmd)
@@ -41,7 +45,7 @@ class BackendController:
 
 
     def move_axis(self,
-                  move_info: Tuple[Literal["cartesian", "joint"], int, str],
+                  move_info: Tuple[Literal["cartesian_linear", "cartesian_rotation", "joint_rotation"], int, Literal['+', '-']],
                   step: float):
         mode, axis_index, direction = move_info
 

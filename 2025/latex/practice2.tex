@@ -1,0 +1,160 @@
+\documentclass[a4paper,14pt]{extarticle}
+
+\usepackage[T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english, russian]{babel}
+
+\usepackage[left=30mm, right=10mm, top=20mm, bottom=20mm]{geometry}
+
+\usepackage{tempora}
+\usepackage{setspace}
+\onehalfspacing
+
+\usepackage{titlesec}
+\titleformat{\section}[block]{\bfseries\centering\MakeUppercase}{\thesection.}{1em}{}
+\titleformat{\subsection}[block]{\bfseries}{\thesubsection.}{1em}{}
+\titleformat{\subsubsection}[block]{\normalsize\bfseries}{\thesubsubsection.}{1em}{}
+
+\renewcommand{\contentsname}{\hfill \textbf{СОДЕРЖАНИЕ} \hfill\null}
+
+\usepackage{indentfirst}
+\setlength{\parindent}{1.25cm}
+
+\usepackage{amsmath, amsfonts, amssymb}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{patterns}
+\usepackage{cmap}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\definecolor{LightGray}{gray}{0.7}
+
+\lstdefinestyle{code}{
+    language=Python,
+    basicstyle=\small\ttfamily,
+    numbers=left,
+    numberstyle=\small\color{LightGray},
+    stepnumber=1,
+    numbersep=5pt,
+    backgroundcolor=\color{white},
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4,
+    captionpos=b,
+    breaklines=true,
+    breakatwhitespace=false,
+    frame=single,
+    rulecolor=\color{LightGray},
+    linewidth=\linewidth,
+    keywordstyle=\color{blue}\bfseries,
+    commentstyle=\color{green!40!black},
+    stringstyle=\color{violet},
+    escapeinside={\%*}{*)},
+    xleftmargin=10pt,
+    xrightmargin=10pt,
+    framexleftmargin=0pt,
+    framexrightmargin=0pt
+}
+\lstset{style=code}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    pdftitle={ITMO Practice},
+    pdfauthor={Rumyantsev Alexey},
+    pdfsubject={TCP computer-robot communication},
+    pdfkeywords={LaTeX, PDF, robot, tcp},
+    pdfpagemode=FullScreen,
+}
+
+\graphicspath{{src/images/}}
+
+\begin{document}
+
+\begin{titlepage}
+    \begin{center}
+        \textbf{Федеральное государственное автономное образовательное учреждение высшего образования}\\
+        \textbf{«НАЦИОНАЛЬНЫЙ ИССЛЕДОВАТЕЛЬСКИЙ УНИВЕРСИТЕТ ИТМО»}\medskip\\
+        \textbf{Факультет систем управления и робототехники}
+        \vfill
+
+        {\large\bfseries Отчет о}\\
+        {\large\bfseries научно исследовательской работе}\medskip\\
+        {\large\bfseries по теме:}\\
+        {\large\bfseries «РАЗРАБОТКА АЛГОРИТМОВ ДЛЯ ВЗАИМОДЕЙСТВИЯ С РОБОТОМ-МАНИПУЛЯТОРОМ С КОМПЬЮТЕРА (С ИСПОЛЬЗОВАНИЕМ TCP)»}
+        \vfill
+
+        \begin{flushright}
+            Выполнил: студент гр. R3341\\
+            А. А. Румянцев\medskip\\
+
+            Проверил: преподаватель\\
+            доцент, старший научный сотрудник, инженер В. С. Громов
+        \end{flushright}
+
+        \vfill
+
+        Санкт-Петербург\\
+        2025 г.
+    \end{center}
+\end{titlepage}
+
+\setcounter{page}{2}
+\tableofcontents
+\newpage
+
+
+\section*{Введение}
+\addcontentsline{toc}{section}{Введение}
+\setcounter{section}{0}
+
+
+% \begin{figure}[H]
+%     \centering
+%     \includegraphics[scale=0.5]{cat.jpg}
+%     \caption{Кошка}
+%     \label{fig:fig_name}
+% \end{figure}
+
+
+% \begin{figure}[htbp]
+%     \centering
+%     \begin{subfigure}{0.3\textwidth}
+%         \includegraphics[width=\linewidth]{cat2.jpg}
+%         \caption{Картинка 1}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}{0.3\textwidth}
+%         \includegraphics[width=\linewidth]{cat2.jpg}
+%         \caption{Картинка 2}
+%     \end{subfigure}
+%     \hfill
+%     \begin{subfigure}{0.3\textwidth}
+%         \includegraphics[width=\linewidth]{cat2.jpg}
+%         \caption{Картинка 3}
+%     \end{subfigure}
+%     \caption{Сравнение изображений}
+%     \label{fig:fig_names}
+% \end{figure}
+
+\appendix
+\renewcommand{\thesection}{\Asbuk{section}}
+
+\section{Приложение}
+% \begin{lstlisting}[label=lst:cat, caption={Пример кода}]
+% cats = ['Siamese cat', 'Maine Coon', 'Persian cat',
+%         'Sphinx', 'Abyssinian cat', 'Scottish fold cat']
+
+% for cat in cats:
+%     print(f'Hello, this is {cat}')
+% \end{lstlisting}
+
+\end{document}

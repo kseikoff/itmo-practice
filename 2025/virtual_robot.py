@@ -4,10 +4,11 @@ from typing import List, Literal, Tuple
 class VirtualRobot:
     def __init__(self,
                  cartesian: List[float] = None,
-                 joint: List[float] = None):
+                 joint: List[float] = None,
+                 kin_sol: Tuple[int, int] = None):
         self.cartesian = cartesian if cartesian is not None else [0.0] * 6
         self.joint = joint if joint is not None else [0.0] * 6
-        self.kinematic_sol = (0, 0)
+        self.kinematic_sol = kin_sol if kin_sol is not None else (0, 0)
 
 
     def update_cartesian(self, new_values: List[float], kinematic_sol: Tuple[int, int]):

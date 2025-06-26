@@ -352,33 +352,161 @@ class ConnectionStatus(Enum):
 \end{compactitem}
 
 
-% \begin{figure}[H]
-%     \centering
-%     \includegraphics[scale=0.5]{cat.jpg}
-%     \caption{Кошка}
-%     \label{fig:fig_name}
-% \end{figure}
+\subsection{Программа на роботе для общения с клиентом}
+На языке MELFA-BASIC напишем простую программу для теста
+связи между компьютером и роботом:
+\lstdefinelanguage{BASIC}{
+  morekeywords={PRINT,CLOSE,SERVO,INPUT,IF,ENDIF,WEND,THEN,ELSE,FOR,TO,NEXT,GOTO,END,REM,WHILE,JOVRD,SPD,DEF,INTE,OPEN},
+  sensitive=false,
+  morecomment=[l]{REM},
+  morestring=[b]",
+}
+\begin{lstlisting}[language=Basic, label=lst:mbtest, caption={Простая программа на роботе для проверки связи с клиентом.}]
+JOVRD 100
+SPD 100
+DEF INTE DCOMM
+DCOMM = 1
+PHELP = P_CURR
+SERVO ON
+OPEN "COM3:" as #1
+
+WHILE DCOMM > 0
+    INPUT #1, DCOMM
+    IF DCOMM = 2 THEN
+        INPUT #1, PHELP
+        PRINT #1, PHELP
+    ENDIF
+WEND
+
+CLOSE #1
+SERVO OFF
+END
+\end{lstlisting}
 
 
-% \begin{figure}[htbp]
-%     \centering
-%     \begin{subfigure}{0.3\textwidth}
-%         \includegraphics[width=\linewidth]{cat2.jpg}
-%         \caption{Картинка 1}
-%     \end{subfigure}
-%     \hfill
-%     \begin{subfigure}{0.3\textwidth}
-%         \includegraphics[width=\linewidth]{cat2.jpg}
-%         \caption{Картинка 2}
-%     \end{subfigure}
-%     \hfill
-%     \begin{subfigure}{0.3\textwidth}
-%         \includegraphics[width=\linewidth]{cat2.jpg}
-%         \caption{Картинка 3}
-%     \end{subfigure}
-%     \caption{Сравнение изображений}
-%     \label{fig:fig_names}
-% \end{figure}
+Краткое описание программы: в переменную DCOMM ожидается поступление
+номера команды от компьютера. Когда команда '2' пришла, робот
+записывает приходящие следующим же сообщением от компьютера
+декартовы координаты и кинематическую пару, после чего
+высылает обратно то же самое, что и получил.
+
+
+Если прислали команду '0', то робот выйдет из цикла и завершит работу.
+
+
+Таким образом проверяется, что робот корректно обрабатывает
+полученные координаты, компьютер верно получает те же координаты обратно.
+После чего робот успешно завершает работу.
+
+
+\subsection{Проверка связи между компьютером и роботом}
+Сообщение роботу нужно отправить в определенном формате.
+Также ответ от робота нужно обработать. Для этого
+напишем скрипт, который будем использовать каждый раз перед
+отправкой и получением координат. Полностью скрипт
+представлен на листинге \ref{lst:cmdman} в приложении Б.
+
+
+Краткое описание скрипта:
+\begin{compactitem}
+    \item \textbf{build\_position\_request(pos: List[float]) -> str} --
+    на вход получает координаты как список чисел с плавающей точкой.
+    Преобразует список в строку в соответствии с шаблоном $\left( v_1,v_2,v_3,v_4,v_5,v_6 \right)$.
+    Возвращает результат преобразования;
+    \item \textbf{parse\_position\_response(response: list)} --
+    получает ответ от робота в виде списка из строки с 12 координатами
+    и кинематической пары и с помощью регулярного выражения
+    делит строку внутри списка на три отдельных списка из сочлененных
+    и декартовых координат и кинематической пары. Возвращает кортеж
+    из трех соответствующих списков.
+\end{compactitem}
+
+
+Также нам нужен скрипт для записи и хранения IP и порта робота.
+Создадим yaml файл, в котором запишем:
+\begin{lstlisting}[label=yaml, caption={Файл, где хранятся данные для подключения к роботу-манипулятору.}]
+connection:
+  ip: "192.168.0.4"
+  port: 10003
+\end{lstlisting}
+
+
+Напишем скрипт, в котором во время работы программы будут сохранены
+эти данные. Полностью скрипт представлен в приложении В на листинге \ref{lst:cfg}.
+
+
+Краткое описание скрипта:
+\begin{compactitem}
+    \item \textbf{load(cls, path: str = "config.yaml")} -- загружает
+    IP адрес и порт из файла по указанном пути. Сохраняет в свои поля ip, port.
+    По умолчанию файл находится в том же каталоге, где и скрипт;
+    \item \textbf{save(cls, path: str = "config.yaml")} -- сохраняет
+    конфигурацию IP и порта в файл по указанному пути;
+    \item \textbf{set\_config(cls, ip: str, port: int)} -- меняет
+    конфигурацию IP и порта во время работы программы. Может пригодиться,
+    если необходимо будет отключиться от одного робота и подключиться к другому,
+    не закрывая программу.
+\end{compactitem}
+
+
+Напишем простую программу для компьютера для проверки соединения
+с роботом:
+\begin{lstlisting}[label=lst:testpy, caption={Простая программа на клиенте для проверки соединения с роботом.}]
+import socket
+from config_manager import Config
+from command_manager import CommandMessageManager
+
+if __name__ == "__main__":
+    Config.load()
+
+    pos = [100.0, -100.0, 100.0, 100.0, 100.0, 100.0]
+    test = CommandMessageManager.build_position_request(pos)
+    test += "(7,0)"
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((Config.ip, Config.port))
+    s.sendall("2".encode('utf-8'))
+    s.sendall(test.encode('utf-8'))
+    ans = s.recv(1024).decode('utf-8')
+    print(ans)
+    s.sendall("0".encode('utf-8'))
+    s.close()
+\end{lstlisting}
+
+
+Краткое описание программы: загружается конфигурация IP и порта
+из файла. Задается некоторая позиция, из которой создается строка
+на отправку. Так как отправляются декартовы координаты, необходимо
+еще к строке на отправку добавить в строковом виде в таком же
+формате кинематическую пару. После чего создается сокет
+с полученными из файла IP адресом и портом. Отправляется закодированная команда '2',
+за которой следуют закодированные обработанные декартовы координаты.
+После чего принимается, декодируется и выводится в консоль ответ от робота.
+В конце высылается закодированная команда '0' для завершения работы робота
+и сокет закрывается.
+
+
+В присутствии преподавателя на робота была загружена программа,
+представленная на листинге \ref{lst:mbtest}. На компьютере
+была запущена программа на листинге \ref{lst:testpy}.
+
+
+Было выслано с компьютера:
+$$
+\left( 100.0, -100.0, 100.0, 100.0, 100.0, 100.0\right)\left( 7,0 \right)
+$$
+
+
+Было получено от робота:
+$$
+\left( +100.0, -100.0, +100.0, +100.0, +100.0, +100.0\right)\left( 7,0 \right)
+$$
+
+
+Робот и компьютер взаимодействуют корректно -- на компьютер пришло то же,
+что было с него выслано. Появились дополнительные плюсы, которые при
+обработке ответа от робота пропадут, то есть они незначащие. Ответ
+робота был выведен в консоль в сыром виде.
+
 
 \appendix
 \renewcommand{\thesection}{\Asbuk{section}}
@@ -437,6 +565,64 @@ class Client:
             return cs.ConnectionStatus.SUCCESS
         except socket.error:
             return cs.ConnectionStatus.RECEIVE_ERROR
+\end{lstlisting}
+
+
+\section{Приложение}
+\begin{lstlisting}[label=lst:cmdman, caption={Скрипт с функциями для обработки координат на отправку или получение.}]
+from typing import List
+import re
+
+class CommandMessageManager:
+    @staticmethod
+    def build_position_request(pos: List[float]) -> str:
+        if len(pos) != 6:
+            raise ValueError('List of pos must contain 6 values')
+
+        return f"({','.join(map(str, pos))})"
+
+    @staticmethod
+    def parse_position_response(response: list):
+        try:
+            matches = re.findall(r'\((.*?)\)', response[0])
+            lists = [list(map(float, group.split(','))) for group in matches[:2]]
+            lists.append(list(map(int, matches[2].split(','))))
+
+            return tuple(lists)
+        except ValueError:
+            return None
+\end{lstlisting}
+
+
+\section{Приложение}
+\begin{lstlisting}[label=lst:cfg, caption={Скрипт для работы с чтением и сохранением конфигурации IP и порта робота.}]
+import yaml
+
+class Config:
+    ip: str = ""
+    port: int = 0
+
+    @classmethod
+    def load(cls, path: str = "config.yaml"):
+        with open(path, "r") as file:
+            config = yaml.safe_load(file)
+            cls.ip = config["connection"]["ip"]
+            cls.port = config["connection"]["port"]
+
+    @classmethod
+    def save(cls, path: str = "config.yaml"):
+        with open(path, "w") as file:
+            yaml.safe_dump({
+                "connection": {
+                    "ip": cls.ip,
+                    "port": cls.port
+                }
+            }, file)
+
+    @classmethod
+    def set_config(cls, ip: str, port: int):
+        cls.ip = ip
+        cls.port = port
 \end{lstlisting}
 
 \end{document}

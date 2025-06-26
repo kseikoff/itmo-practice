@@ -1,4 +1,5 @@
 # import socket
+# from command_manager import CommandMessageManager
 import sys
 from PySide6.QtWidgets import QApplication
 from config_manager import Config
@@ -16,7 +17,6 @@ if __name__ == "__main__":
 
     # test
     # pos = [100.0, -100.0, 100.0, 100.0, 100.0, 100.0]
-    # from command_manager import CommandMessageManager
     # test = CommandMessageManager.build_position_request(pos)
     # test += "(7,0)"
     # s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

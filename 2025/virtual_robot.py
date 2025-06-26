@@ -41,22 +41,3 @@ class VirtualRobot:
 
         new_pos[axis_index] += step
         return new_pos
-
-
-    def calculate_composite_move(
-            self,
-            mode: Literal["cartesian_linear", "cartesian_rotation", "joint_rotation"],
-            deltas: List[float]
-    ) -> List[float]:
-        if len(deltas) != 6:
-            raise ValueError("Value of deltas must contain 6 values")
-
-        if "cartesian" in mode:
-            base = self.cartesian
-        elif "joint" in mode:
-            base = self.joint
-        else:
-            raise ValueError("Expected 'cartesian' or 'joint' mode")
-
-        return [base[i] + deltas[i] for i in range(6)]
-

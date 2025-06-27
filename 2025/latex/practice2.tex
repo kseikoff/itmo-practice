@@ -650,7 +650,7 @@ MODE_TO_COMMAND = {
     в соответствии с нуждами;
     \item \textbf{move\_axis(self, move\_info: ..., step: float)} -- принимает кортеж
     из трех элементов, описанных ранее, и шаг. По направлению определяет знак шага.
-    Вызывает метод calculate\_next\_move виртуального робота, куда передает тип координаты,
+    Вызывает функцию calculate\_next\_move виртуального робота, куда передает тип координаты,
     ее порядковый номер и шаг (подразумевается, что в виртуальном роботе уже сохранены координаты
     настоящего). Далее отправляет на робот номер команды в соответствии
     с конвертацией из словаря MODE\_TO\_COMMAND. С помощью build\_position\_request
@@ -681,6 +681,212 @@ MODE_TO_COMMAND = {
 соответствовать тем, что были отправлены). Аналогично при получении команды '3', однако
 координаты сочлененные и не нужна кинематическая пара. Если приходит команда '0', то
 цикл завершается, робот выключается, предварительно закрыв соединение.
+
+
+\section{Добавление пользовательского интерфейса}
+Данная практическая работа является частью общего проекта
+на тему "Разработка графического интерфейса для взаимодействия с\\ роботом-манипулятором".
+Этот проект делится на две подтемы -- тема данной работы и "Разработка графического интерфейса программы".
+Вторая подтема была выполнена студентом, с которым выполнялся общий проект.
+Следовательно, в данной практической работе пользовательская часть интерфейса
+не будет подробно рассматриваться, так как в данной теме она является вспомогательной.
+Разработанные алгоритмы взаимодействия с роботом возможно использовать в различных
+графических интерфейсах.
+
+
+\subsection{Описание интерфейса}
+Краткое описание интерфейса: в интерфейсе
+есть кнопки на каждую координату в двух видах -- с плюсом и с минусом.
+Шаг задается ползунками -- в миллиметрах для линейных координат, в градусах для вращательных координат.
+Есть возможность задавать и менять IP адрес и порт в окне программы. Есть кнопка подключения,
+которая после успешного подключения меняется на кнопку отключения. Пока подключение к роботу
+не осуществлено, интерфейс остается недоступным.
+
+
+\subsection{Взаимодействие интерфейса и основной логики программы}
+Рассмотрим взаимодействие интерфейса и основной логики программы.
+
+
+Каждой кнопке в окне программы соответствует свой move\_info.
+Структурно это словарь, который можно назвать картой кнопок окна программы.
+Реализация представлена на листинге \ref{mvinf} в приложении Ж.
+
+
+При полном нажатии кнопки connect, вызывается функция обработки
+нажатия данной кнопки handle\_connection(self). Ее реализация
+представлена на листинге \ref{lst:hancon} в приложении З.
+
+
+Краткое описание функции handle\_connection(self):
+проверяет функцией is\_connected, есть ли подключение
+компьютера к роботу. Если подключения нет (например, первый запуск программы),
+то берется сохраненная конфигурация IP и порта, вызывается функция connect
+у надслойки. Если подключение не удалось, то интерфейс останется заблокированным.
+Чтобы снова попытаться подключиться, необходимо будет нажать кнопку connect еще раз.
+Если подключение удалось, то на робот сразу высылается запрос на получение
+координат через функцию надслойки get\_pos. Далее ответ обрабатывается
+функцией parse\_position\_response. После обработки полученные координаты
+и кинематическая пара присваиваются виртуальному роботу, также вызывается
+функция обновления отображаемых в интерфейсе координат робота. Эта функция
+берет координаты из виртуального робота и выводит их в окно программы.
+В конце интерфейс разблокируется, кнопка connect меняется на disconnect.
+Если подключение уже есть и кнопка нажата еще раз, то произойдет отключение
+клиента от робота через надслойку disconnect, то есть на робот будет
+отправлена команда '0' и он выключится.
+
+
+
+При нажатии кнопок изменения координат вызывается обработчик\\
+handle\_axis\_button(self). Реализация данной функции представлена
+на листинге \ref{lst:hab} в приложении И.
+
+
+Краткое описание функции handle\_axis\_button(self):
+берет из карты кнопок с move\_info кортеж move\_info по имени нажатой кнопки.
+Проверяет, какой тип координаты находится в этом кортеже. Если тип декартовый линейный,
+то берет шаг с ползунка с миллиметровой шкалой. Если тип декартовый вращательный,
+то берет шаг с ползунка для декартовых вращательных координат с градусной шкалой.
+Если тип сочлененный, то аналогично декартовым вращательным координатам, но
+ползунок для сочлененных координат. Далее вызывает функцию move\_axis, куда передает
+move\_info и шаг,
+обрабатывает ответ функцией parse\_position\_response, записывает
+в виртаульного робота пришедшие от настоящего координаты и кинематическую пару.
+Далее вызывает функцию обновления координат в интерфейсе.
+
+
+\section{Тестирование работы программы}
+\subsection{Проверка работы программы}
+Для тестирования напишем основной файл, где будет вызываться интерфейс:
+\begin{lstlisting}[label=lst:main, caption={Точка входа программы.}]
+import sys
+from PySide6.QtWidgets import QApplication
+from config_manager import Config
+
+import main_window as mw
+
+if __name__ == "__main__":
+    Config.load()
+
+    app = QApplication(sys.argv)
+
+    window = mw.MainWindow()
+    window.show()
+
+    sys.exit(app.exec())
+\end{lstlisting}
+
+
+Сначала загружается конфиг IP и порта, после создается окно программы,
+к кнопкам которого привязана логика взаимодействия компьютера с роботом по TCP.
+
+
+Все опыты проводились в присутствии преподавателя.
+На робот загружена программа, представленная на листинге \ref{lst:finalmelfa}.
+Подключение робота к ноутбуку осуществлялось через Ethernet кабель.
+
+
+Окно клиентской программы до подключения к роботу имеет вид, представленный на рис. \ref{fig:nonactive}.
+После успешного подключения клиентской программы к роботу, окно
+программы принимает вид, представленный на рис. \ref{fig:active_cartesian}, \ref{fig:active_joint}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{nonactive.png}
+    \caption{Окно клиентской программы до подключения к роботу.}
+    \label{fig:nonactive}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{active_cartesian.png}
+    \caption{Окно клиентской программы после подключения к роботу: декартовы координаты.}
+    \label{fig:active_cartesian}
+\end{figure}
+
+
+Для сочлененных координат необходимо поменять вкладку 'XYZ' на 'Joints'.
+Окно программы с переключением на сочлененные координаты имеет вид:
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.5]{active_joint.png}
+    \caption{Окно клиентской программы после подключения к роботу: сочлененные координаты.}
+    \label{fig:active_joint}
+\end{figure}
+
+
+Проверим соответствие координат в программе координатам, отображаемым на пульте управления.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.06]{cartesian_pult.png}
+    \caption{Проверка соответствия координат: декартовы координаты на пульте.}
+    \label{fig:cartesian_pult}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.06]{joint_pult.png}
+    \caption{Проверка соответствия координат: сочлененные координаты на пульте.}
+    \label{fig:joint_pult}
+\end{figure}
+
+
+Сравнивая рис. \ref{fig:cartesian_pult} с \ref{fig:active_cartesian}
+и \ref{fig:joint_pult} с \ref{fig:active_joint} видим, что координаты
+совпадают с учетом округления.
+
+
+Зафиксируем начальное положение робота.
+Несколько раз нажмем кнопку 'Y+' в окне программы, задав ползунком шаг 5 мм.
+Зафиксируем конечное положение робота.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.06]{cartesian_Y_1.png}
+    \caption{Начальное положение робота.}
+    \label{fig:cartesian_Y_1}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.06]{cartesian_Y_2.png}
+    \caption{Положение робота после нажатия кнопки 'Y+' несколько раз с шагом 5 мм.}
+    \label{fig:cartesian_Y_2}
+\end{figure}
+
+
+Как видим, робот переместился вдоль координаты 'Y'. При автоматическом
+управлении роботом ручной режим недоступен.
+
+
+\subsection{Проблемы в ходе тестирования}
+В ходе тестирования работоспособности программы
+случались некоторые ошибки, в основном связанные
+с проверкой условий, обработкой ответа от робота
+или несовпадением ожидаемых и получаемых типов переменных
+внутри клиентской логики.
+Все проблемы были решены на месте, программа стала работать без ошибок.
+
+
+\section{Заключение}
+В ходе выполнения практической работы
+были разработаны алгоритмы для взаимодействия
+компьютера с роботом-манипулятором,
+их работоспособность была успешно проверена на роботе.
+Для выполнения работы был изучен робот-манипулятор,
+язык программирования MELFA BASIC
+и сетевое взаимодействие с помощью
+языка программирования Python.
+Был выбран формат сообщения,
+простестирована связь клиента и робота,
+доработана основная логика, подключен
+графический интерфейс и отлажены ошибки,
+возникшие в процессе тестирования.
+
+
+\section{Список использованных источников}
+\begin{enumerate}
+    \item Mitsubishi Electric MELFA RV-3SDB Series Manuals \href{https://www.manualslib.com/products/Mitsubishi-Electric-Melfa-Rv-3sdb-Series-11307307.html}{(ссылка)}
+    \item socket -- Low-level networking interface \href{https://docs.python.org/3/library/socket.html}{(ссылка)}
+    \item re — Regular expression operations \href{https://docs.python.org/3/library/re.html}{(ссылка)}
+    \item typing — Support for type hints \href{https://docs.python.org/3/library/typing.html}{(ссылка)}
+    \item enum — Support for enumerations \href{https://docs.python.org/3/library/enum.html}{(ссылка)}
+    \item Python YAML: How to Load, Read, and Write YAML \href{https://python.land/data-processing/python-yaml}{(ссылка)}
+\end{enumerate}
 
 
 \appendix
@@ -946,4 +1152,105 @@ SERVO OFF
 END
 \end{lstlisting}
 
+
+\section{Приложение}
+\begin{lstlisting}[label=mvinf, caption={Карта кнопок окна программы, которым соответствуют кортежи move\_info, описывающие соответствующую кнопку.}]
+self.axis_button_map = {
+'btn_Xp': ("cartesian_linear", CartesianAxis.X.value, '+'),
+'btn_Xm': ("cartesian_linear", CartesianAxis.X.value, '-'),
+'btn_Yp': ("cartesian_linear", CartesianAxis.Y.value, '+'),
+'btn_Ym': ("cartesian_linear", CartesianAxis.Y.value, '-'),
+'btn_Zp': ("cartesian_linear", CartesianAxis.Z.value, '+'),
+'btn_Zm': ("cartesian_linear", CartesianAxis.Z.value, '-'),
+'btn_RXp': ("cartesian_rotation", CartesianAxis.A.value, '+'),
+'btn_RXm': ("cartesian_rotation", CartesianAxis.A.value, '-'),
+'btn_RYp': ("cartesian_rotation", CartesianAxis.B.value, '+'),
+'btn_RYm': ("cartesian_rotation", CartesianAxis.B.value, '-'),
+'btn_RZp': ("cartesian_rotation", CartesianAxis.C.value, '+'),
+'btn_RZm': ("cartesian_rotation", CartesianAxis.C.value, '-'),
+'btn_J1p': ("joint_rotation", JointAxis.J1.value, '+'),
+'btn_J1m': ("joint_rotation", JointAxis.J1.value, '-'),
+'btn_J2p': ("joint_rotation", JointAxis.J2.value, '+'),
+'btn_J2m': ("joint_rotation", JointAxis.J2.value, '-'),
+'btn_J3p': ("joint_rotation", JointAxis.J3.value, '+'),
+'btn_J3m': ("joint_rotation", JointAxis.J3.value, '-'),
+'btn_J4p': ("joint_rotation", JointAxis.J4.value, '+'),
+'btn_J4m': ("joint_rotation", JointAxis.J4.value, '-'),
+'btn_J5p': ("joint_rotation", JointAxis.J5.value, '+'),
+'btn_J5m': ("joint_rotation", JointAxis.J5.value, '-'),
+'btn_J6p': ("joint_rotation", JointAxis.J6.value, '+'),
+'btn_J6m': ("joint_rotation", JointAxis.J6.value, '-'),
+} 
+\end{lstlisting}
+
+
+\section{Приложение}
+\begin{lstlisting}[label=lst:hancon, caption={Реализация обработки нажатия на кнопку connect/disconnect в интерфейсе.}]
+def handle_connection(self):
+    if self.backend.is_connected():
+        self.backend.disconnect()
+
+        if not self.backend.is_connected():
+            self.ui.tabWidget.setEnabled(False)
+            self.ui.btn_connect.setText("CONNECT")
+    else:
+        try:
+            ip = Config.ip
+            port = Config.port
+            self.backend.connect(ip, port)
+
+            if self.backend.is_connected():
+                response = self.backend.get_pos()
+                joints, cartesian, kinematic_sol = CommandMessageManager.parse_position_response(response)
+
+                self.backend.robot.update_cartesian(cartesian, kinematic_sol)
+                self.backend.robot.update_joint(joints)
+
+                self.update_ui_axis()
+
+                self.ui.tabWidget.setEnabled(True)
+                self.ui.btn_connect.setText("DISCONNECT")
+        except Exception as e:
+            print(f"Caught exception: {e}")
+\end{lstlisting}
+
+
+\section{Приложение}
+\begin{lstlisting}[label=lst:hab, caption={Реализация функции обработки нажатия кнопок изменения координат.}]
+def handle_axis_button(self):
+    btn = self.sender()
+    if not btn:
+        return
+
+    btn_name = btn.objectName()
+    if btn_name not in self.axis_button_map:
+        print(f"Unexpected button: {btn_name}")
+        return
+
+    move_info = self.axis_button_map[btn_name]
+    mode, _, _ = move_info
+
+    if "cartesian" in mode:
+        if not "rotation" in mode:
+            step = self.linear_step_val
+        else:
+            step = self.degree_1_step_val
+    else:
+        step = self.degree_2_step_val
+
+    if not self.backend.is_connected():
+        print("Unexpected event: no connection")
+        return
+
+    try:
+        response = self.backend.move_axis(move_info, step)
+        joints, cartesian, kinematic_sol = CommandMessageManager.parse_position_response(response)
+
+        self.backend.robot.update_cartesian(cartesian, kinematic_sol)
+        self.backend.robot.update_joint(joints)
+
+        self.update_ui_axis()
+    except Exception as e:
+        print(f"Caught exception: {e}")
+\end{lstlisting}
 \end{document}
